@@ -10,9 +10,9 @@
             var getDB = new URLSearchParams(window.location.search).get("db");
             if(getDB == null || getDB == ""){getDB = "bibliotheek";}
             const sqlPromise = initSqlJs({
-                locateFile: file => `https://www.fpmheemskerk.com/SQLite/${file}`
+                locateFile: file => `https://annavanrijn.github.io/WebPages/SQLite/${file}`
             });
-            const dataPromise = fetch(`https://www.fpmheemskerk.com/SQLite/${getDB}.sqlite`).then(res => res.arrayBuffer());
+            const dataPromise = fetch(`https://annavanrijn.github.io/WebPages/SQLite/${getDB}.sqlite`).then(res => res.arrayBuffer());
             const [SQL, buf] = await Promise.all([sqlPromise, dataPromise])
             return new SQL.Database(new Uint8Array(buf));
         }
