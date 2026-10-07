@@ -7,13 +7,18 @@
         <script>
         var $scope;
         const start = async function() {
+            console.log('1');
             var getDB = new URLSearchParams(window.location.search).get("db");
             if(getDB == null || getDB == ""){getDB = "bibliotheek";}
+            console.log('2', getDB);
             const sqlPromise = initSqlJs({
                 locateFile: file => `https://annavanrijn.github.io/WebPages/SQLite/${file}`
             });
+            console.log('3');
             const dataPromise = fetch(`https://annavanrijn.github.io/WebPages/SQLite/${getDB}.sqlite`).then(res => res.arrayBuffer());
+            console.log('4', dataPromise);
             const [SQL, buf] = await Promise.all([sqlPromise, dataPromise])
+            console.log('5', SQL, buf);
             return new SQL.Database(new Uint8Array(buf));
         }
         var db = start().then(function (a) {$scope = a;});
