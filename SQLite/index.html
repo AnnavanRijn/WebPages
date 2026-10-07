@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src='sql-wasm.js'></script>
+        <script src='highlight/highlight.js'></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.2/ace.js" integrity="sha512-yjhIcftV1KZyd3rLPujicRV6NpFEuCqQaOBBdrey6vFdU1zVkJYgJf9a+15YrOuzzSXYNV2GU4xdQ8Xy9Zj/fA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script>
+        var $scope;
+        const start = async function() {
+            var getDB = new URLSearchParams(window.location.search).get("db");
+            if(getDB == null || getDB == ""){getDB = "bibliotheek";}
+            const sqlPromise = initSqlJs({
+                locateFile: file => `https://www.fpmheemskerk.com/SQLite/${file}`
+            });
+            const dataPromise = fetch(`https://www.fpmheemskerk.com/SQLite/${getDB}.sqlite`).then(res => res.arrayBuffer());
+            const [SQL, buf] = await Promise.all([sqlPromise, dataPromise])
+            return new SQL.Database(new Uint8Array(buf));
+        }
+        var db = start().then(function (a) {$scope = a;});
+        
+        const showResult = function (){
+            try{
+                var ex = $scope.exec(editor.getValue());
+                if(ex.length != 0){
+                console.log(ex);
+                var result = ex[0];
+                console.log(result);
+                document.getElementById("resultTable").classList.remove("hide");
+                document.getElementById("error").classList.remove("show");
+                var thead = document.querySelector("#resultTable thead");
+                thead.innerHTML = "";
+                var head = thead.insertRow();
+                head.insertCell().innerHTML = "#";
+                result.columns.forEach(function(item, index, array) {
+                    var c = head.insertCell();
+                    c.innerHTML = item;
+                });
+                var tbody = document.querySelector("#resultTable tbody");
+                tbody.innerHTML = "";
+                result.values.splice(1000);
+                result.values.forEach(function(item, index, array) {
+                    var bc = tbody.insertRow();
+                    bc.insertCell().innerHTML = index;
+                    item.forEach(function(item, index, array){
+                        var c = bc.insertCell();
+                        c.innerHTML = item;
+                    });
+                    console.log(item);
+                });
+                }
+                else
+                {
+                    document.getElementById("resultTable").classList.add("hide");
+                    document.getElementById("error").classList.add("show");
+                    document.getElementById("error").innerHTML = "Done";
+                }
+            }
+            catch (error){
+                document.getElementById("resultTable").classList.add("hide");
+                document.getElementById("error").classList.add("show");
+                document.getElementById("error").innerHTML = error;
+            }
+        }
+        window.addEventListener("load", function(){
+           document.getElementById("getResult").addEventListener("click", function(){
+                showResult();
+            });
+        });
+        
+        </script>
+        <link rel="stylesheet" href="table.css">
+        <link rel="stylesheet" href="table2.css">
+        <style>
+            *{margin: 0; padding: 0;}
+            body{padding: 10px; background-color: black;}
+            #container, #result{
+                display: block;
+                position: relative;
+            }
+            #container{
+                width: calc(100vw - 20px);
+                height: calc(30vh - 10px);
+                font-size: medium;
+            }
+            #editor, #resultTable{
+                width: 100%;
+                height: 100%;
+            }
+            #resultTable{
+                font-size: small;
+            }
+            #resultTable.hide{
+                display: none;
+            }
+            #result{
+                width: calc(100vw - 20px);
+                height: calc(70vh - 10px);
+                overflow: scroll;
+            }
+            #getResult{
+                width: 100px;
+                padding: 4px;
+                background-color: #997777;
+                color: white;
+                position: absolute;
+                right: 0;
+                bottom: 0;
+                text-align: center;
+                margin: 3px;
+                border-radius: 4px;
+                border: 2px white solid;
+            }
+            #getResult:hover{
+                cursor: pointer;
+            }
+            #error{
+                display: none;
+                color:red;
+                font-size:Large;
+            }
+            #error.show{
+                display: block;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+        <div id="editor">SELECT *
+FROM Tabel</div>
+        <div id="getResult">Uitvoeren</div>
+        </div>
+        <div id="result">
+            <table id="resultTable" class="table"><thead></thead><tbody></tbody></table>
+            <div id="error"></div>
+        </div>
+        <script>
+            var editor = ace.edit("editor");
+            editor.setTheme("ace/theme/monokai");
+            editor.session.setMode("ace/mode/sql");
+        </script>
+    </body>
+</html>
